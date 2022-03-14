@@ -1,17 +1,20 @@
 import './styles.css';
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { BASE_URL } from "utils/requrests";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Movie } from "types/movie";
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useEffect } from "react";
+import { validateEmail } from 'types/validate';
+
 
 type Props = {
     movieId: string;
 }
 
-function FormCard( { movieId } : Props) {
+function FormCard({ movieId }: Props) {
 
+    const navigate = useNavigate();
     const [movie, setMovie] = useState<Movie>();
 
     useEffect(() => {
@@ -22,12 +25,41 @@ function FormCard( { movieId } : Props) {
             });
     }, [movieId])
 
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const email = (event.target as any).email.value;
+        const score = (event.target as any).score.value;
+
+        if (!validateEmail(email)) {
+            return;
+        }
+
+        const config: AxiosRequestConfig = {
+            baseURL: BASE_URL,
+            method: 'PUT',
+            url: '/scores',
+            data: {
+                email: email,
+                movieId: movieId,
+                score: score
+            }
+        }
+
+        axios(config).then(
+            response => {
+                navigate("/");
+            }
+        )
+    }
+
+
     return (
         <div className="movieapp-form-container">
             <img className="movieapp-movie-card-image" src={movie?.image} alt={movie?.title} />
             <div className="movieapp-card-bottom-container">
                 <h3>{movie?.title}</h3>
-                <form className="movieapp-form">
+                <form className="movieapp-form" onSubmit={handleSubmit}>
                     <div className="form-group movieapp-form-group">
                         <label htmlFor="email">Informe seu email</label>
                         <input type="email" className="form-control" id="email" />
